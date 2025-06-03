@@ -9,63 +9,72 @@ jobs:
       ANDROID_HOME: ${{ github.workspace }}/android-sdk
     steps:
       - name: Checkout
-        uses: actions/checkout@main
+        uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Setup Android NDK
-        id: setup-ndk
-        uses: nttld/setup-ndk@main
-        with:
-          ndk-version: r21e
-
       - name: Setup Java JDK
-        uses: actions/setup-java@main
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        run: |
+          mkdir -p $ANDROID_HOME
+          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+          unzip commandlinetools-linux-*.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+          rm commandlinetools-linux-*.zip
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+
+      - name: Accept Android Licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r21e
 
       - name: Setup Haxe
-        uses: krdlab/setup-haxe@master
-        with:
-          haxe-version: 4.2.5
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haxe
+          mkdir -p ~/haxelib
+          haxelib setup ~/haxelib --always
 
       - name: Installing Libraries
         run: |
-          mkdir -p ~/haxelib
-          haxelib setup ~/haxelib
-          haxelib install hxcpp 4.2.1 --quiet
-          haxelib install lime 7.9.0
-          haxelib install openfl 9.1.0
-          haxelib install flixel 4.11.0
-          haxelib install flixel-tools
-          haxelib install flixel-ui
-          haxelib install flixel-addons 3.0.2
-          haxelib git hxCodec https://github.com/SPLCoding/hxCodec-but-it-works-xd.git
-          haxelib git linc_luajit https://github.com/Sirox228/linc_luajit
-          haxelib install hscript
-          haxelib git hscript-ex https://github.com/ianharrigan/hscript-ex
-          haxelib install hxcpp-debug-server
+          haxelib --global install hxcpp 4.2.1 --quiet
+          haxelib --global install lime 7.9.0
+          haxelib --global install openfl 9.1.0
+          haxelib --global install flixel 4.11.0
+          haxelib --global install flixel-tools
+          haxelib --global install flixel-ui
+          haxelib --global install flixel-addons 3.0.2
+          haxelib --global git hxCodec https://github.com/SPLCoding/hxCodec-but-it-works-xd.git
+          haxelib --global git linc_luajit https://github.com/Sirox228/linc_luajit
+          haxelib --global install hscript
+          haxelib --global git hscript-ex https://github.com/ianharrigan/hscript-ex
+          haxelib --global install hxcpp-debug-server
           haxelib list
 
       - name: Configure Android
         run: |
-          haxelib run lime setup android -y
-          haxelib run lime config ANDROID_SDK $ANDROID_HOME
-          haxelib run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
-          haxelib run lime config JAVA_HOME $JAVA_HOME
-          haxelib run lime config ANDROID_SETUP true
+          haxelib --global run lime setup android -y
+          haxelib --global run lime config ANDROID_SDK $ANDROID_HOME
+          haxelib --global run lime config ANDROID_NDK_ROOT $ANDROID_NDK_HOME
+          haxelib --global run lime config JAVA_HOME $JAVA_HOME_17_X64
+          haxelib --global run lime config ANDROID_SETUP true
         env:
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
       - name: Building
-        run: haxelib run lime build android -final -v
+        run: haxelib --global run lime build android -final -v
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@main
+        uses: actions/upload-artifact@v4
         with:
           name: FNF-Android-Build
           path: export/release/android/bin/*.apk

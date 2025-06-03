@@ -52,7 +52,7 @@ jobs:
           haxelib --global install openfl 9.1.0
           haxelib --global install flixel 4.11.0
           haxelib --global install flixel-tools
-          haxelib --global install flixel-ui
+          haxelib --global install flixel-ui 2.5.0
           haxelib --global install flixel-addons 3.0.2
           haxelib --global git hxCodec https://github.com/SPLCoding/hxCodec-but-it-works-xd.git
           haxelib --global git linc_luajit https://github.com/superpowers04/linc_luajit

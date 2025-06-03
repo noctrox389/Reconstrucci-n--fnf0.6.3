@@ -54,7 +54,7 @@ jobs:
           haxelib --global install flixel-ui
           haxelib --global install flixel-addons 3.0.2
           haxelib --global git hxCodec https://github.com/SPLCoding/hxCodec-but-it-works-xd.git
-          haxelib --global git linc_luajit https://github.com/Sirox228/linc_luajit
+          haxelib --global git linc_luajit https://github.com/superpowers04/linc_luajit
           haxelib --global install hscript
           haxelib --global git hscript-ex https://github.com/ianharrigan/hscript-ex
           haxelib --global install hxcpp-debug-server

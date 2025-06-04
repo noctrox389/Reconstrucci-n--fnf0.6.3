@@ -29,7 +29,6 @@ jobs:
           rm commandlinetools-linux-*.zip
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           
-          # Instalar componentes específicos
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.1"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools"
@@ -39,18 +38,18 @@ jobs:
       - name: Setup Haxe
         run: |
           sudo apt-get update
-          sudo apt-get install -y haxe=4.2.5-1~bionic  # Versión específica para compatibilidad
+          sudo apt-get install -y wget
+          wget https://haxe.org/website-content/downloads/4.2.5/downloads/haxe-4.2.5-linux64.tar.gz
+          sudo tar -xvf haxe-4.2.5-linux64.tar.gz -C /usr/local
+          sudo ln -s /usr/local/haxe-4.2.5 /usr/local/haxe
+          sudo ln -s /usr/local/haxe/haxe /usr/local/bin/haxe
+          sudo ln -s /usr/local/haxe/haxelib /usr/local/bin/haxelib
           mkdir -p ~/haxelib
           haxelib setup ~/haxelib --always
+          rm haxe-4.2.5-linux64.tar.gz
 
       - name: Installing Libraries
         run: |
-          # Limpieza de instalaciones previas
-          haxelib --global remove hxcpp
-          haxelib --global remove lime
-          haxelib --global remove openfl
-          
-          # Instalación con versiones compatibles
           haxelib --global install hxcpp 4.2.1 --quiet
           haxelib --global install lime 8.0.1
           haxelib --global install openfl 9.2.1
@@ -58,13 +57,9 @@ jobs:
           haxelib --global install flixel-tools
           haxelib --global install flixel-ui 2.6.0
           haxelib --global install flixel-addons 3.0.2
-          
-          # Parche para hxCodec
           haxelib --global git hxCodec https://github.com/polybiusproxy/hxCodec.git
           cd $HOME/haxelib/hxCodec/git
           sed -i '467s/(cast)/(cast).toInt()/' src/vlc/VLCBitmap.hx
-          
-          # Otras dependencias
           haxelib --global git linc_luajit https://github.com/superpowers04/linc_luajit
           haxelib --global install hscript 2.5.0
           haxelib --global git hscript-ex https://github.com/ianharrigan/hscript-ex
@@ -80,9 +75,6 @@ jobs:
           haxelib --global run lime config ANDROID_SETUP true
         env:
           ANDROID_NDK_HOME: $ANDROID_HOME/ndk/25.1.8937393
-
-      - name: Clean Build
-        run: haxelib --global run lime clean android
 
       - name: Building
         run: haxelib --global run lime build android -final -v -Dv2

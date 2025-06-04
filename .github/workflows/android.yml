@@ -29,34 +29,44 @@ jobs:
           rm commandlinetools-linux-*.zip
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           
-          # Instalar plataformas y build-tools específicos
+          # Instalar componentes específicos
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-33"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "build-tools;33.0.1"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platform-tools"
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "ndk;25.1.8937393"
-
-      - name: Accept Android Licenses
-        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Setup Haxe
         run: |
           sudo apt-get update
-          sudo apt-get install -y haxe
+          sudo apt-get install -y haxe=4.2.5-1~bionic  # Versión específica para compatibilidad
           mkdir -p ~/haxelib
           haxelib setup ~/haxelib --always
 
       - name: Installing Libraries
         run: |
+          # Limpieza de instalaciones previas
+          haxelib --global remove hxcpp
+          haxelib --global remove lime
+          haxelib --global remove openfl
+          
+          # Instalación con versiones compatibles
           haxelib --global install hxcpp 4.2.1 --quiet
-          haxelib --global install lime 7.9.0
-          haxelib --global install openfl 9.1.0
-          haxelib --global install flixel 4.11.0
+          haxelib --global install lime 8.0.1
+          haxelib --global install openfl 9.2.1
+          haxelib --global install flixel 5.4.0
           haxelib --global install flixel-tools
-          haxelib --global install flixel-ui 2.5.0
+          haxelib --global install flixel-ui 2.6.0
           haxelib --global install flixel-addons 3.0.2
-          haxelib --global git hxCodec https://github.com/SPLCoding/hxCodec-but-it-works-xd.git
+          
+          # Parche para hxCodec
+          haxelib --global git hxCodec https://github.com/polybiusproxy/hxCodec.git
+          cd $HOME/haxelib/hxCodec/git
+          sed -i '467s/(cast)/(cast).toInt()/' src/vlc/VLCBitmap.hx
+          
+          # Otras dependencias
           haxelib --global git linc_luajit https://github.com/superpowers04/linc_luajit
-          haxelib --global install hscript
+          haxelib --global install hscript 2.5.0
           haxelib --global git hscript-ex https://github.com/ianharrigan/hscript-ex
           haxelib --global install hxcpp-debug-server
           haxelib list
@@ -71,8 +81,11 @@ jobs:
         env:
           ANDROID_NDK_HOME: $ANDROID_HOME/ndk/25.1.8937393
 
+      - name: Clean Build
+        run: haxelib --global run lime clean android
+
       - name: Building
-        run: haxelib --global run lime build android -final -v
+        run: haxelib --global run lime build android -final -v -Dv2
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
